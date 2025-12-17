@@ -1,66 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
-  <title>Year calculator app</title>
-  <link rel="stylesheet" href="./assets/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE MORTALITY CLOCK | SURYA OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@900&display=swap');
+
+        :root {
+            --vosco-gold: #C5A059;
+            --bg: #050505;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .outfit { font-family: 'Outfit', sans-serif; }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--vosco-gold);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 40px; height: 40px;
+            background: linear-gradient(45deg, transparent 50%, rgba(197, 160, 89, 0.1) 50%);
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .glitch-text {
+            text-shadow: 2px 0 #ff00c1, -2px 0 #00fff9;
+            animation: glitch 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 1px 0 #ff00c1, -1px 0 #00fff9; }
+            100% { text-shadow: -1px 0 #ff00c1, 1px 0 #00fff9; }
+        }
+
+        .ms-glow {
+            color: var(--vosco-gold);
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
+        }
+
+        .grid-bg {
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .detailed-age-box {
+            background: linear-gradient(90deg, transparent, rgba(197, 160, 89, 0.05), transparent);
+            border-left: 2px solid var(--vosco-gold);
+            border-right: 2px solid var(--vosco-gold);
+        }
+    </style>
 </head>
+<body class="grid-bg">
+    <div class="fixed inset-0 pointer-events-none opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
-<body>
+    <main class="max-w-5xl mx-auto px-6 py-20 relative z-10">
+        <!-- Header -->
+        <header class="mb-16 text-center lg:text-left">
+            <p class="text-[10px] tracking-[0.5em] text-vosco-gold uppercase mb-2">VOSCO BIOMETRIC DIV.</p>
+            <h1 class="outfit text-6xl md:text-8xl font-black tracking-tighter mb-4">MORTALITY <br>SCANNER<span class="text-vosco-gold">.</span></h1>
+            <p class="text-slate-500 max-w-md italic">"Calculating exactly how much of your limited existence has evaporated into the void."</p>
+        </header>
 
-  <main class="container" role="main">
-    <div class="content">
-  
-      <div class="input">
+        <!-- Input Section -->
+        <section class="mb-20">
+            <div class="bg-white/[0.03] border border-white/10 p-8 rounded-sm">
+                <label class="block text-xs uppercase tracking-widest text-slate-400 mb-4">When did the tragedy begin? (DOB)</label>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="date" id="dob" class="bg-black border border-white/20 p-4 text-xl flex-grow focus:outline-none focus:border-vosco-gold transition-all text-white">
+                    <button onclick="calculateAge()" class="bg-white text-black px-10 py-4 font-black text-xs tracking-widest uppercase hover:bg-vosco-gold hover:text-white transition-all">
+                        ANALYZE LIFE
+                    </button>
+                </div>
+            </div>
+        </section>
 
-        <div>
-          <h6>Day</h6>
-          <input type="text" placeholder="DD" id="dayIn">
-          <p class="error"></p>
+        <!-- Results (Hidden initially) -->
+        <div id="results" class="hidden space-y-12">
+            
+            <!-- Detailed Human-Readable String -->
+            <div class="detailed-age-box p-8 text-center">
+                <p class="text-[10px] tracking-[0.3em] text-vosco-gold uppercase mb-4">Human Readable Format</p>
+                <h3 id="readable-string" class="text-xl md:text-2xl font-bold italic text-slate-200"></h3>
+            </div>
+
+            <!-- The "Big" Number -->
+            <div class="text-center py-12 border-y border-white/5">
+                <h2 id="humor-message" class="text-2xl italic text-slate-300 mb-6"></h2>
+                <div class="outfit text-7xl md:text-9xl font-black text-vosco-gold" id="main-age">00</div>
+                <p class="uppercase tracking-[0.6em] text-slate-500 text-xs mt-4">Solar Revolutions Completed</p>
+            </div>
+
+            <!-- Detailed Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="stat-card">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Decades</span>
+                    <div id="decades" class="text-4xl font-bold mt-2">0</div>
+                </div>
+                <div class="stat-card">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Months</span>
+                    <div id="months" class="text-4xl font-bold mt-2">0</div>
+                </div>
+                <div class="stat-card">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Weeks</span>
+                    <div id="weeks" class="text-4xl font-bold mt-2">0</div>
+                </div>
+                <div class="stat-card">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Days</span>
+                    <div id="days" class="text-4xl font-bold mt-2">0</div>
+                </div>
+                <div class="stat-card">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Hours</span>
+                    <div id="hours" class="text-4xl font-bold mt-2">0</div>
+                </div>
+                <div class="stat-card">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Minutes</span>
+                    <div id="minutes" class="text-4xl font-bold mt-2">0</div>
+                </div>
+                <div class="stat-card col-span-2">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">Seconds & ms</span>
+                    <div class="text-4xl font-bold mt-2 flex items-baseline gap-2">
+                        <span id="seconds">0</span>
+                        <span id="millis" class="text-xl ms-glow font-mono">.000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Birthday Message -->
+            <div id="birthday-alert" class="hidden p-10 bg-vosco-gold text-black text-center">
+                <h3 class="outfit text-5xl font-black mb-4 glitch-text">LEVEL UP!</h3>
+                <p class="text-xl font-bold uppercase tracking-tighter">Congratulations. You are officially one year closer to becoming a ghost. Eat some sugar-based bread to celebrate.</p>
+            </div>
         </div>
-    
-        <div>
-          <h6>Month</h6>
-          <input type="text" placeholder="MM" id="monthIn">
-          <p class="error"></p>
-        </div>
-     
-        <div>
-          <h6>Year</h6>
-          <input type="text" placeholder="YYYY" id="yearIn">
-          <p class="error"></p>
-        </div>
-      </div>
-    
-      <hr>
-      <button id="calculateBtn">
-        <img src="./assets/images/icon-arrow.svg" alt="">
-      </button>
+    </main>
 
-   
-      <div class="result">
-        <h1><span id="yearOut">--</span> years</h1>
-        <h1><span id="monthOut">--</span> months</h1>
-        <h1><span id="dayOut">--</span> days</h1>
-        <h1><span id="hourOut">--</span> hours</h1>
-        <h1><span id="minuteOut">--</span> minutes</h1>
+    <footer class="p-10 text-center opacity-30 text-[10px] tracking-[0.5em] uppercase">
+        VOSCO ANALYTICS // SURYA OPERATING SYSTEM v2.1
+    </footer>
 
-      </div>
-    </div>
-  </main>
+    <script>
+        let timer = null;
+        const dobInput = document.getElementById('dob');
+        const resultsDiv = document.getElementById('results');
+        const bdayAlert = document.getElementById('birthday-alert');
+        const readableBox = document.getElementById('readable-string');
+        
+        const humorMessages = [
+            "Still here? Impressive.",
+            "You're aging like fine milk.",
+            "Physically 20, spiritually a Victorian ghost.",
+            "The warranty on your back is about to expire.",
+            "At least you're not as old as you'll be tomorrow.",
+            "Time is a flat circle, and you're stuck on it.",
+            "You've survived another day of gravity."
+        ];
 
+        function getDetailedAge(birthDate, now) {
+            let years = now.getFullYear() - birthDate.getFullYear();
+            let months = now.getMonth() - birthDate.getMonth();
+            let days = now.getDate() - birthDate.getDate();
+            let hours = now.getHours() - birthDate.getHours();
+            let minutes = now.getMinutes() - birthDate.getMinutes();
 
-  <footer class="attribution" role="contentinfo">
+            if (minutes < 0) {
+                hours--;
+                minutes += 60;
+            }
+            if (hours < 0) {
+                days--;
+                hours += 24;
+            }
+            if (days < 0) {
+                months--;
+                // Get days in previous month
+                const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
 
-    Coded by <a href="https://github.com/developerrahulofficial">Rahul Sahni</a>.
-  </footer>
+            return `You are currently ${years} years, ${months} months, ${days} days, ${hours} hours, and ${minutes} minutes old!`;
+        }
 
+        function calculateAge() {
+            const dobValue = dobInput.value;
+            if (!dobValue) return;
 
-  <script src="./assets/js/main.js"></script>
+            if (timer) clearInterval(timer);
+            resultsDiv.classList.remove('hidden');
+            
+            // Random humor
+            document.getElementById('humor-message').innerText = humorMessages[Math.floor(Math.random() * humorMessages.length)];
+
+            timer = setInterval(() => {
+                const now = new Date();
+                const birthDate = new Date(dobValue);
+                const diff = now - birthDate;
+
+                if (diff < 0) {
+                    document.getElementById('humor-message').innerText = "A time traveler? Bold choice.";
+                    readableBox.innerText = "Error: Birthdate exists in the future.";
+                    return;
+                }
+
+                // Precision Calculations
+                const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+                const decades = (years / 10).toFixed(1);
+                const monthsTotal = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.44));
+                const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+                const daysTotal = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hoursTotal = Math.floor(diff / (1000 * 60 * 60));
+                const minutesTotal = Math.floor(diff / (1000 * 60));
+                const secondsTotal = Math.floor(diff / 1000);
+                const millis = diff % 1000;
+
+                // Update UI Counters
+                document.getElementById('main-age').innerText = years;
+                document.getElementById('decades').innerText = decades;
+                document.getElementById('months').innerText = monthsTotal.toLocaleString();
+                document.getElementById('weeks').innerText = weeks.toLocaleString();
+                document.getElementById('days').innerText = daysTotal.toLocaleString();
+                document.getElementById('hours').innerText = hoursTotal.toLocaleString();
+                document.getElementById('minutes').innerText = minutesTotal.toLocaleString();
+                document.getElementById('seconds').innerText = secondsTotal.toLocaleString();
+                document.getElementById('millis').innerText = '.' + millis.toString().padStart(3, '0');
+
+                // Detailed String
+                readableBox.innerText = getDetailedAge(birthDate, now);
+
+                // Birthday check
+                const isBirthday = now.getMonth() === birthDate.getMonth() && now.getDate() === birthDate.getDate();
+                if (isBirthday) {
+                    bdayAlert.classList.remove('hidden');
+                } else {
+                    bdayAlert.classList.add('hidden');
+                }
+            }, 50);
+        }
+
+        dobInput.max = new Date().toISOString().split("T")[0];
+    </script>
 </body>
-
-
 </html>
